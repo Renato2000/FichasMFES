@@ -1,0 +1,52 @@
+c The Unicorn puzzle
+c
+c  1 mythical?
+c  2 immortal?
+c  3 mammal?
+c  4 horned?
+c  5 magical?
+c
+c If the unicorn is mythical, then it is immortal.
+c 1 -> 2   ou seja -1 \/ 2
+c If the unicorn is not mythical, then it is a mortal mammal.
+c -1 -> -2 /\ 3   ou seja 1 \/ (-2 /\ 3) ou seja (1 \/ -2) /\ (1 \/ 3)
+c If the unicorn is either immortal or a mammal, then it is horned.
+c 2 \/ 3 -> 4  ou seja (-2 /\ -3) \/ 4 ou seja (-2 \/ 4) /\ (-3 \/ 4)
+c The unicorn is magical if it is horned.
+c 4 -> 5  ou seja -4 \/ 5
+
+p cnf 5 8
+-1 2 0
+1 -2 0
+1 3 0
+-2 4 0
+-3 4 0
+-4 5 0
+
+
+c Is the unicorn magical?    SIM é mágico.
+c -5 0                       deu UNSAT
+
+c Is the unicorn horned?     SIM tem um corno.
+c -4 0                       deu UNSAT
+
+c Is the unicorn mythical?
+c -1 0        deu SAT  logo não posso garantir que é (sempre) mítico
+c 1 0         deu SAT  logo não posso garantir que nunca é mítico
+
+c Será que o unicórnio é simultanemente mítico e imortal ?
+c  Gamma |=  1 /\ 2    sse  Gamma, ~(1 /\ 2) UNSAT
+c  ~(1 /\ 2)  == -1 \/ -2
+
+c -1 -2 0     deu SAT  logo não posso garantir que é simultanemente mítico e imortal
+
+c Será que se o unicórnio for mítico ele é mamífero ?
+c  Gamma |= 1 -> 3    sse  Gamma, -(1->3) UNSAT   
+c -(1->3) = 1 /\ -3
+
+1 0
+-3 0
+c deu SAT logo não podemos garartir que se o unicórnio for mítico ele é mamífero
+
+
+
