@@ -1,74 +1,70 @@
-sig Workstation {
-	workers : set Worker,
-	succ : set Workstation
-}
-one sig begin, end in Workstation {}
-
-sig Worker {}
-sig Human, Robot extends Worker {}
-
-abstract sig Product {
-	parts : set Product	
+sig User {
+	follows : set User,
+	sees : set Photo,
+	posts : set Photo,
+	suggested : set User
 }
 
-sig Material extends Product {}
+sig Influencer extends User {}
 
-sig Component extends Product {
-	workstation : set Workstation
+sig Photo {
+	date : one Day
 }
+sig Ad extends Photo {}
 
-sig Dangerous in Product {}
+sig Day {}
 
 // Specify the following properties
 // You can check their correctness with the different commands and
 // when specifying each property you can assume all the previous ones to be true
 
 pred inv1 {
-	// Workers are either human or robots
-  	Worker in Human + Robot
+	// Every image is posted by one user
+  	all p : Photo | one posts.p
 }
 
 pred inv2 {
-	// Every workstation has workers and every worker works in one workstation
-  	all w : Workstation | some w.workers 
-  	all w : Worker | one w.~workers
+	// An user cannot follow itself.
+  	//all u : User | u->u not in follows
+	no follows & iden
 }
 
 pred inv3 {
-	// Every component is assembled in one workstation
-	all c : Component | one c.workstation
+	// An user only sees (non ad) photos posted by followed users. 
+	// Ads can be seen by everyone.
+	// all u1 : User, i : Photo | (i not in Ad and u1 in sees.i) implies (some u2 : User | u1 in follows.u2 and u2 in posts.i) 
+	all u : User | u.sees - Ad in u.follows.posts
 }
 
 pred inv4 {
-	// Components must have parts and materials have no parts
-	all c : Component | c in Product.~parts
-  	no Material & Product.~parts
+	// If an user posts an ad then all its posts should be labelled as ads
+  	// all u : User | (some a : Ad | u->a in posts) implies all p : Photo | u->p in posts implies p in Ad
+	all u : User | u.posts in Ad or u.posts in Photo - Ad
 }
 
 pred inv5 {
-	// Humans and robots cannot work together
-  	all w : Workstation | no Robot->Human & w.workers->w.workers
+	// Influencers are followed by everyone else
+	// all i : Influencer, u : User | u != i implies u->i in follows
+  	all u : User | (Influencer-u) in u.follows 
 }
 
 pred inv6 {
-	// Components cannot be their own parts
-  	no ^parts & iden
+	// Influencers post every day
+	// all d : Day, i : Influencer | some p : Photo | i->p in posts and p->d in date
+  	// all d : Day, i : Influencer | some p : Photo | i in posts.p and p in date.d
+  	all i : Influencer | i.posts.date = Day
 }
 
 pred inv7 {
-	// Components built of dangerous parts are also dangerous
-	all c : Component | some c.^parts & Dangerous implies c in Dangerous
+	// Suggested are other users followed by followed users, but not yet followed
+	// all u1, u2 : User | u1->u2 in suggested iff (some u3 : User | u1->u3 in follows and u3->u2 in follows and u1->u2 not in follows and u1 != u2)
+  	// all u1, u2 : User | u1 in suggested.u2 iff (some u3 : User | u1 in follows.u3 - follows.u2 and u3 in follows.u2 and u1 != u2)
+  	all u : User | u.suggested = (u.follows.follows - u.follows - u)
 }
 
 pred inv8 {
-	// Dangerous components cannot be assembled by humans
-	no Human & (Component & Dangerous).workstation.workers
-}
-
-pred inv9 {
-	// The workstations form a single line between begin and end
-}
-
-pred inv10 {
-	// The parts of a component must be assembled before it in the production line
+	// An user only sees ads from followed or suggested users
+	// all u1 : User, a : Ad | u1->a in sees implies some u2 : User | u2->a in posts and (u1->u2 in follows or u1->u2 in suggested)
+	// all u1 : User, a : Ad | u1 in sees.a implies some u2 : User | u2 in posts.a and u1 in follows.u2 + suggested.u2
+  	all u : User | (u.sees & Ad) in (u.follows.posts + u.suggested.posts)
 }

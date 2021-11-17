@@ -52,25 +52,23 @@ pred inv5 {
 
 pred inv6 {
 	// Components cannot be their own parts
-
+  	no ^parts & iden
 }
 
 pred inv7 {
 	// Components built of dangerous parts are also dangerous
-
+	all c : Component | some c.^parts & Dangerous implies c in Dangerous
 }
 
 pred inv8 {
 	// Dangerous components cannot be assembled by humans
-
+	no Human & (Component & Dangerous).workstation.workers
 }
 
 pred inv9 {
 	// The workstations form a single line between begin and end
-
 }
 
 pred inv10 {
 	// The parts of a component must be assembled before it in the production line
-
 }
